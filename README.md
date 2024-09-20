@@ -4,94 +4,149 @@
 
 Пользователи с ролью администратора могут выкладывать новые фильмы, добавлять актеров, режиссеров, удалять чужие отзывы, добавлять новые подписки и категории.
 ## Функциональные требования:
-### - аутентификация / авторизация пользователей
+<hr></hr>
+
+### Каталог фильмов:
+Отображение списка всех доступных фильмов с Джейсоном Стейтхемом
+
+Фильтрация фильмов по жанру, году выпуска, рейтингу
+
+Поиск фильмов по названию, актерам, режиссерам
+
+Сортировка фильмов по различным параметрам (дата добавления, рейтинг, популярность)
+
+Отображение детальной информации о фильме (описание, актерский состав, режиссер, год выпуска, рейтинг)
+
+<hr></hr>
+
+### Система подписок:
+Различные типы подписок с разным набором доступных фильмов
+
+Возможность приобретения подписки
+
+Отображение информации о текущей подписке и сроке ее действия
+
+<hr></hr>
+
+### Отзывы и рейтинги:
+Возможность оставлять текстовые отзывы к фильмам
+
+Система оценок фильмов (например, от 1 до 10 звезд)
+
+Отображение средней оценки фильма
+
+Возможность лайкать/дизлайкать отзывы других пользователей
+
+<hr></hr>
+
+### аутентификация / авторизация пользователей
 
 аутентификация пользователей посредством сравнения почты и хэшированного пароля
 
 авторизация пользователей с использованием JWT токенов
 
-### - CRUD операции
+<hr></hr>
+
+### CRUD операции
 
 CRUD операции с пользователями, актерами, режиссерами, отзывами, фильмами и категориями
 
-### - Роли
+<hr></hr>
+
+### Роли
 
 Пользователь (user) - просмотр фильмов, CRUD своих отзывов, покупка подписки.
 
 Администратор (admin) - весь функционал пользователя, CRUD всех фильмов, отзывов, категорий, актеров и режиссеров.
 
-## Журналирование
+<hr></hr>
+
+### Журналирование
 
 Сохранение истории подписок и просмотренных фильмов пользователя.
 
 # Таблицы базы данных
-users (Таблица пользователей): 
-  - id integer Primary key - первичный ключ
-  - username varchar not null - пользовательское имя
-  - email varchar Unique not null- электронная почта
-  - password varchar not null- пароль
-  - role varchar not null - роль
+![alt text](https://github.com/Rosto4eks/StathamFilms/blob/master/content/diagram.png)
 
-movies (1:M Таблица с фильмами):
-  - id integer Primary key - первичный ключ
-  - subscription_id integer not null references subscriptions(id) 
-  - title varchar not null - название фильма
-  - year date not null - год выпуска фильма
-  - duration float not null - длительность
+Users (
+  - Id SERIAL PRIMARY KEY,
+  - Username VARCHAR(64) NOT NULL,
+  - Email VARCHAR(128) UNIQUE NOT NULL,
+  - User_password VARCHAR(128) NOT NULL,
+  - User_role VARCHAR(64) DEFAULT 'guest',
+);
 
-actors (Таблица с актерами):
-  - id integer Primary key - первичный ключ
-  - first_name varchar not null - имя актера
-  - last_name varchar not null - фамилия актера
-  - birth_date date - день рождения актера
+SubscriptionTypes (
+  - Id SERIAL PRIMARY KEY,
+  - Title VARCHAR(128) UNIQUE NOT NULL,
+  - Price numeric(10, 2) NOT NULL,
+  - Month_duration INTEGER NOT NULL,
+);
 
-directors (Таблица с режиссерами):
-  - id integer Primary key - первичный ключ
-  - first_name varchar not null - имя режиссера
-  - last_name varchar not null - фамилия режиссера
-  - birth_date date - день рождения режиссера
+Subscriptions (
+  - Id SERIAL PRIMARY KEY,
+  - User_id INTEGER NOT NULL REFERENCES Users (Id),
+  - SubscriptionType_id INTEGER NOT NULL REFERENCES SubscriptionTypes (Id),
+  - Started_at DATE NOT NULL,
+  - Ended_at DATE NOT NULL
+);
 
-subscriptionTypes (Таблица с подписками):
-  - id integer Primary key - первичный ключ
-  - name varchar not null - название подписки
-  - price money not null - цена
-  - duration integer not null - длительность подписки в месяцах
+Movies (
+  - Id SERIAL PRIMARY KEY,
+  - Subscription_id INTEGER REFERENCES SubscriptionTypes (Id),
+  - Title VARCHAR(256) NOT NULL,
+  - Created_at DATE NOT NULL,
+  - Duration NUMERIC(10, 2) NOT NULL,
+);
 
-reviews (1:M Таблица с отзывами):
-  - id integer Primary key - первичный ключ
-  - user_id integer not null references users(id) - внешний ключ 
-  - movie_id integer not null references movies(id) - внешний ключ 
-  - created_at date not null - дата написания отзыва
+Actors (
+  - Id SERIAL PRIMARY KEY,
+  - First_name VARCHAR(128) NOT NULL,
+  - Last_name VARCHAR(128) NOT NULL,
+  - Birth_date DATE NOT NULL
+);
 
-Subscruptions (1:1 Таблица подписок пользователей):
-  - id integer Primary key - первичный ключ
-  - user_id integer Unique not null references users(id) - уникальный внешний ключ users.id
-  - subscriptionType_id integer not null references users(id) - внешний ключ
-  - amount integer not null - количество
-  - start_date date not null - начало
-  - end_date date not null - окончание
+Directors (
+  - Id SERIAL PRIMARY KEY,
+  - First_name VARCHAR(128) NOT NULL,
+  - Last_name VARCHAR(128) NOT NULL,
+  - Birth_date DATE NOT NULL
+);
 
-viewingHistory (M:1 Таблица просмотров фильмов):
-  - id integer Primary key - первичный ключ
-  - user_id integer not null references users(id) -  внешний ключ users.id
-  - movie_id integer not null references movies(id) - внешний ключ movies.id
-  - watch_date date not null - дата просмотра
-  - duration float not null - продолжительность
+Reviews (
+  - Id SERIAL PRIMARY KEY,
+  - User_id INTEGER NOT NULL REFERENCES Users (Id) ON DELETE CASCADE,
+  - Movie_id INTEGER NOT NULL REFERENCES Movies (Id) ON DELETE CASCADE,
+  - Review_text TEXT NOT NULL,
+  - Score INTEGER NOT NULL,
+  - Created_at DATE NOT NULL,
+);
 
-categories (Таблица категорий):
-  - id integer Primary key - первичный ключ
-  - name varchar not null - название категории
+ViewingHistory (
+  - Id SERIAL PRIMARY KEY,
+  - User_id INTEGER NOT NULL REFERENCES Users (Id) ON DELETE CASCADE,
+  - Movie_id INTEGER NOT NULL REFERENCES Movies (Id),
+  - Watch_date DATE NOT NULL,
+  - Duration NUMERIC(10, 2) NOT NULL,
+);
 
-movieCategories (M:M Таблица связи фильмов и категорий):
-  - movie_id integer not null references movies(id) - внешний ключ movies.id
-  - category_id integer not null references categories(id) - внешний ключ categories.id
-}
+Categories (
+  - Id SERIAL PRIMARY KEY,
+  - Title VARCHAR(128) UNIQUE NOT NULL
+);
 
-movieActors (M:M Таблица связи фильмов и актеров):
-  - movie_id integer not null references movies(id) - внешний ключ movies.id
-  - actor_id integer not null references actors(id) - внешний ключ actors.id
-  - role varchar - роль в фильме
+MovieCategories (
+  - Movie_id INTEGER NOT NULL REFERENCES Movies (Id) ON DELETE CASCADE,
+  - Category_id INTEGER NOT NULL REFERENCES Categories (Id) ON DELETE CASCADE
+);
 
-movieDirectors (M:M Таблица связи фильмов и режиссеров):
-  - movie_id integer not null references movies(id) - внешний ключ movies.id
-  - director_id integer not null references directors(id) - внешний ключ directors.id
+MovieActors (
+  - Movie_id INTEGER NOT NULL REFERENCES Movies (Id) ON DELETE CASCADE,
+  - Actor_id INTEGER NOT NULL REFERENCES Actors (Id) ON DELETE CASCADE,
+  - Movie_role VARCHAR(128) NOT NULL
+);
+
+MovieDirectors (
+  - Movie_id INTEGER NOT NULL REFERENCES Movies (Id) ON DELETE CASCADE,
+  - Director_id INTEGER NOT NULL REFERENCES Directors (Id) ON DELETE CASCADE
+);
